@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TensorFlow Summaries</title>
+  <meta name="description" content="Artificial intelligence (AI) is a rich field spanning formal systems for representing and processing symbolic information, computational models of human cogn...">
+
+  <link rel="stylesheet" href="/ai-course-material/assets/main.css">
+  <link rel="canonical" href="/ai-course-material/tensorflow/summaries/">
+  <link rel="alternate" type="application/rss+xml" title="50.021 Artificial Intelligence" href="/ai-course-material/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" href="/ai-course-material/">50.021 Artificial Intelligence</a>
+  
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+            <a class="page-link" href="/ai-course-material/tensorflow/">Tensorflow</a>
+            
+          
+            
+            
+            <a class="page-link" href="/ai-course-material/about/">About</a>
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">TensorFlow Summaries</h1>
+  </header>
+
+  <div class="post-content">
+    <ul id="markdown-toc">
+  <li><a href="#overview" id="markdown-toc-overview">Overview</a></li>
+  <li><a href="#tapping-on-tensors" id="markdown-toc-tapping-on-tensors">Tapping on Tensors</a></li>
+  <li><a href="#evaluating-summary-nodes" id="markdown-toc-evaluating-summary-nodes">Evaluating Summary Nodes</a></li>
+  <li><a href="#write-to-file" id="markdown-toc-write-to-file">Write to File</a>    <ul>
+      <li><a href="#creating-filewriter-object" id="markdown-toc-creating-filewriter-object">Creating <code class="highlighter-rouge">FileWriter</code> Object</a></li>
+      <li><a href="#writing-summary-information" id="markdown-toc-writing-summary-information">Writing Summary Information</a></li>
+    </ul>
+  </li>
+  <li><a href="#complete-code" id="markdown-toc-complete-code">Complete Code</a></li>
+  <li><a href="#running-multiple-summary-tensors" id="markdown-toc-running-multiple-summary-tensors">Running Multiple Summary Tensors</a></li>
+  <li><a href="#subfolders-for-separate-summaries" id="markdown-toc-subfolders-for-separate-summaries">Subfolders for Separate Summaries</a></li>
+  <li><a href="#running-nodes-twice" id="markdown-toc-running-nodes-twice">Running Nodes Twice?</a></li>
+  <li><a href="#exercises" id="markdown-toc-exercises">Exercises</a></li>
+</ul>
+
+<h1 id="overview">Overview</h1>
+
+<p>TensorFlow summary <em>tensor</em>s are <a href="/ai-course-material/tensorflow/introduction/#tensor"><em>tensor</em>s</a> you must evaluate (via <code class="highlighter-rouge">tf.Session.run()</code>) in order to get summary data. These summary <em>tensor</em>s are output by summary <em>op</em>s.</p>
+
+<p>In this lesson, we will look at <em>op</em> <code class="highlighter-rouge">tf.summary.scalar</code>. You can easily extrapolate this lesson to include <a href="https://www.tensorflow.org/api_guides/python/summary#summary_ops">other summary <em>op</em>s</a>.</p>
+
+<p>After running those <em>node</em>, you will use a <a href="https://www.tensorflow.org/api_docs/python/tf/summary/FileWriter"><code class="highlighter-rouge">tf.summary.FileWriter</code> object</a> to log the information to a file. This <code class="highlighter-rouge">FileWriter</code> is not a <em>node</em> in your graph, it is merely an object that writes to disk.</p>
+
+<h1 id="tapping-on-tensors">Tapping on Tensors</h1>
+
+<p>Getting information from within your graph is very much like inserting a “<em>phone tap</em>” on <em>tensor</em>s in your graph.</p>
+
+<p>In the following code excerpt at line 7, we’re tapping on <em>tensor</em> <code class="highlighter-rouge">y</code> by placing a <code class="highlighter-rouge">tf.summary.scalar</code> <em>node</em> there, which takes in <em>tensor</em> <code class="highlighter-rouge">y</code> as its input. Another tap is placed at line 10 on <em>tensor</em> <code class="highlighter-rouge">z</code>.</p>
+
+<pre class="linenos"><code>4
+5
+6
+7
+8
+9
+10
+</code></pre>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">build_graph</span><span class="p">():</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">report_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s">'y'</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">report_z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s">'z'</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span></code></pre></figure>
+
+<div class="tip">
+  <p>Any <em>tensor</em> in a graph can be “<em>listened to</em>” by placing a <a href="https://www.tensorflow.org/api_guides/python/summary#summary_ops"><code class="highlighter-rouge">tf.summary</code> op</a> at the <em>tensor</em> — that is, by setting the <em>tensor</em> as the input to the <code class="highlighter-rouge">tf.summary</code> op.</p>
+</div>
+
+<div class="forward">
+  <p>The complete code is at the <a href="#complete-code">section Complete Code</a> below. You can refer to it as you go through this lesson. The code basically feeds <code class="highlighter-rouge">x</code> with values from 0 to 4 pi to draw 2 cycles of a sine curve.</p>
+</div>
+
+<h1 id="evaluating-summary-nodes">Evaluating Summary Nodes</h1>
+
+<div class="tip">
+  <p>Summary <em>tensor</em>s are evaluated just like any other <em>tensor</em>s — via <code class="highlighter-rouge">tf.Session.run()</code>.</p>
+</div>
+
+<p>At line 17, we receive summary <em>tensor</em> <code class="highlighter-rouge">report_y</code> from <code class="highlighter-rouge">build_graph()</code>. At line 28, we proceed to evaluate this <em>tensor</em>:</p>
+
+<pre class="linenos"><code>4
+5
+6
+7
+.
+12
+13
+14
+15
+16
+17
+.
+24
+27
+28
+</code></pre>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">build_graph</span><span class="p">():</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">report_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s">'y'</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">report_y</span><span class="p">,</span> <span class="n">x</span>
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+    <span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+
+    <span class="n">report</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">):</span>
+        <span class="c"># Run only tensor 'report_y', not 'report_z'.</span>
+        <span class="n">summ</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="nb">input</span><span class="p">})</span></code></pre></figure>
+
+<p>It is easy to trace why evaluating <em>tensor</em> <code class="highlighter-rouge">report_y</code> will also evaluate <em>tensor</em> <code class="highlighter-rouge">y</code>. <em>Tensor</em> <code class="highlighter-rouge">report_y</code> is generated with <em>tensor</em> <code class="highlighter-rouge">y</code> as input, so TensorFlow knows to evaluate <em>tensor</em> <code class="highlighter-rouge">y</code> before <em>tensor</em> <code class="highlighter-rouge">report_y</code>.</p>
+
+<h1 id="write-to-file">Write to File</h1>
+
+<p>We must first create a <code class="highlighter-rouge">tf.summary.FileWriter</code> object, and then add summary information to that object.</p>
+
+<h2 id="creating-filewriter-object">Creating <code class="highlighter-rouge">FileWriter</code> Object</h2>
+
+<p>The <code class="highlighter-rouge">tf.summary.FileWriter</code> object is created with at least 1 parameter — the folder where you want to write the summaries to.</p>
+
+<p>A second optional parameter will attach a graph to the FileWriter that will show up in TensorBoard (as seen early on in <a href="/ai-course-material/tensorflow/introduction/#why-computation-graph">TensorFlow Introduction</a>).</p>
+
+<div class="tip">
+  <p>A <code class="highlighter-rouge">tf.summary.FileWriter</code> object is created with at least 1 parameter and an optional 2nd parameter:</p>
+  <ol>
+    <li>folder to write summaries in</li>
+    <li>graph (for TensorBoard to show)</li>
+  </ol>
+
+  <p>eg. <code class="highlighter-rouge">writer = tf.summary.FileWriter('./log/, sess.graph)</code></p>
+</div>
+
+<p>In the following code excerpt, notice we create the <code class="highlighter-rouge">FileWriter</code> after calling <code class="highlighter-rouge">build_graph()</code>. Our graph is only constructed in the call to <code class="highlighter-rouge">build_graph()</code>.</p>
+
+<pre class="linenos"><code>15
+16
+17
+18
+19
+</code></pre>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python">    <span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+
+    <span class="n">report</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">()</span>
+
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="s">'./log'</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span></code></pre></figure>
+
+<div class="tip">
+  <p>We typically create the <code class="highlighter-rouge">tf.summary.FileWriter</code> object after <em>constructing our graph</em>.</p>
+</div>
+
+<h2 id="writing-summary-information">Writing Summary Information</h2>
+
+<p>It is typical for multiple experiments (iterations) to be run in order to get a correlation we want to track.</p>
+
+<div class="forward">
+  <p>Later on in machine learning, you will see these “<em>multiple experiments</em>” as <em>multiple (machine) training sessions</em>, each session spitting out a “<em>training accuracy</em>” we want to track.</p>
+</div>
+
+<p>Hence, we add (write to disk) summary information over iterations via method <code class="highlighter-rouge">tf.summary.FileWriter.add_summary()</code>. The 1st parameter is the summary information to add; the 2nd parameter is the label for the iteration (usually a running integer).</p>
+
+<p>We see an example of this in the following code excerpt at line 29:</p>
+
+<pre class="linenos"><code>15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+26
+28
+29
+</code></pre>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python">    <span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+
+    <span class="n">report</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">()</span>
+
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="s">'./log'</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="nb">input</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">number_of_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="mi">4</span><span class="o">*</span><span class="mi">22</span><span class="o">/</span><span class="mi">7</span><span class="p">)</span> <span class="o">/</span> <span class="n">step</span><span class="p">))</span> <span class="c"># domain, 4 pi</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">):</span>
+        <span class="nb">input</span> <span class="o">+=</span> <span class="mf">0.1</span>
+        <span class="n">summ</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="nb">input</span><span class="p">})</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summ</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span></code></pre></figure>
+
+<p>At line 29, <code class="highlighter-rouge">summ</code> is really the result of <code class="highlighter-rouge">sin(x)</code>. We’ll soon see that we have effectively plotted the sine curve.</p>
+
+<div class="tip">
+  <p>A value is recorded into the summary report via method <code class="highlighter-rouge">tf.summary.FileWriter.add_summary()</code>. The 1st parameter is the value to record. The optional 2nd parameter is the step label, usually a running integer.</p>
+</div>
+
+<div class="tip">
+  <p>The reason why the 2nd parameter is a running integer is due to the way TensorFlow is typically used — machines are trained over <em>iteration</em>s, aka <em>step</em>s, with each <em>step</em> training the machine to be “<em>less wrong</em>”.</p>
+</div>
+
+<h1 id="complete-code">Complete Code</h1>
+
+<p>As <code class="highlighter-rouge">x</code> is fed values from 0 to 4 pi, <em>tensor</em> <code class="highlighter-rouge">y</code> traces out the sine curve.</p>
+
+<p><em>Tensor</em> <code class="highlighter-rouge">z</code> is added to demonstrate that it is not evaluated. Only <em>tensor</em> <code class="highlighter-rouge">report_y</code> is evaluated, which does not require the value of <em>tensor</em> <code class="highlighter-rouge">z</code> at all.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="k">def</span> <span class="nf">build_graph</span><span class="p">():</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">report_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s">'y'</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">report_z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s">'z'</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">report_y</span><span class="p">,</span> <span class="n">x</span>
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+    <span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+
+    <span class="n">report</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">()</span>
+
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="s">'./log'</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="nb">input</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">number_of_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="mi">4</span><span class="o">*</span><span class="mi">22</span><span class="o">/</span><span class="mi">7</span><span class="p">)</span> <span class="o">/</span> <span class="n">step</span><span class="p">))</span> <span class="c"># domain, 4 pi</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'i: {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s">'</span><span class="se">\r</span><span class="s">'</span><span class="p">)</span>
+        <span class="nb">input</span> <span class="o">+=</span> <span class="mf">0.1</span>
+        <span class="c"># Run only tensor 'report_y', not 'report_z'.</span>
+        <span class="n">summ</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="nb">input</span><span class="p">})</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summ</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">run</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span></code></pre></figure>
+
+<h1 id="running-multiple-summary-tensors">Running Multiple Summary Tensors</h1>
+
+<p>The typical way to run summary nodes is to run them <em>all at once</em>.</p>
+
+<p>The method <code class="highlighter-rouge">tf.summary.merge_all()</code> returns a summary <em>tensor</em> that is a merged collection of all summary <em>tensor</em>s in the graph. You can then evaluate that summary <em>tensor</em>, which works as a compilation of all summary <em>tensor</em>s.</p>
+
+<h1 id="subfolders-for-separate-summaries">Subfolders for Separate Summaries</h1>
+
+<p>It is typical to compare 2 sets of summaries. TensorBoard allows us to feed it multiple sets of summaries, presumably generated from different sets of inputs, to compare how our algorithm performs with different sets of inputs. This use case is easier demonstrated than explained.</p>
+
+<div class="forward">
+  <p>In machine learning, it is typical to compare <em>accuracy</em> of training against <em>accuracy</em> of test. You’ll learn more about this use case for <em>separate sets of summaries</em> when you get into machine learning.</p>
+
+  <p>Hopefully, this explanation can make the one above clearer.</p>
+</div>
+
+<p>In the following code, you’ll see 2 curves plotted on top of each other — one is a sine curve and the other the square of it. Note the use of subfolders in log folders at lines 15 and 16:</p>
+
+<pre class="linenos"><code>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+</code></pre>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="k">def</span> <span class="nf">build_graph</span><span class="p">():</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s">'y'</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">report</span><span class="p">,</span> <span class="n">y</span>
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+    <span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+
+    <span class="n">report</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">()</span>
+
+    <span class="n">sin_writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="s">'./log/sin'</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">sq_writer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">FileWriter</span><span class="p">(</span><span class="s">'./log/sq'</span><span class="p">,</span> <span class="n">sess</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span> <span class="c"># Plain Python variable</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">number_of_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="mi">4</span><span class="o">*</span><span class="mi">22</span><span class="o">/</span><span class="mi">7</span><span class="p">)</span> <span class="o">/</span> <span class="n">step</span><span class="p">))</span> <span class="c"># domain, 4 pi</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'i: {}'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s">'</span><span class="se">\r</span><span class="s">'</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="mf">0.1</span>
+        <span class="n">summ</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">y</span><span class="p">:</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)})</span>
+        <span class="n">sin_writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summ</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">summ</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">y</span><span class="p">:</span> <span class="n">math</span><span class="o">.</span><span class="nb">pow</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">2</span><span class="p">)})</span>
+        <span class="n">sq_writer</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">summ</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">run</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span></code></pre></figure>
+
+<p>Indeed, we see the square of the sine curve slightly lower (lesser in ‘y’ value) than the sine curve. Any square of a number between 0 and 1 will result in a lower number.</p>
+
+<div class="figure">
+  <p><img src="/ai-course-material/assets/tensorflow-summaries/plot.png" alt="Plot of 2 summaries" /></p>
+</div>
+
+<h1 id="running-nodes-twice">Running Nodes Twice?</h1>
+
+<p>We usually run both the algorithm (its final <em>tensor</em>) and the summary <em>tensor</em> within a single <code class="highlighter-rouge">tf.Session.run()</code>.</p>
+
+<p>With changes to <a href="#complete-code">the original complete code</a> at lines 12, 17 and 28, we see a typical use case where both the summary <em>tensor</em> and the algorithm <em>tensor</em> are evaluated:</p>
+
+<pre class="linenos"><code>4
+5
+6
+7
+.
+12
+13
+14
+17
+.
+24
+28
+</code></pre>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">build_graph</span><span class="p">():</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">report_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">scalar</span><span class="p">(</span><span class="s">'y'</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">report_y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+    <span class="n">report</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">):</span>
+        <span class="n">summ</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">report</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="nb">input</span><span class="p">})</span></code></pre></figure>
+
+<p>If you’re suspecting that we typically run <em>node</em>s twice when writing summaries, you may be right!</p>
+
+<p>However, TensorFlow seems to have <a href="https://github.com/samjabrahams/tensorflow-white-paper-notes/blob/master/README.md#51-common-subexpression-elimination">some optimizations</a> that involve “<em>common subexpression elimination</em>”.</p>
+
+<p>For example, <code class="highlighter-rouge">(1 + 2)</code> and <code class="highlighter-rouge">(1 + 2) * 5</code> would evaluate <code class="highlighter-rouge">(1 + 2)</code> only once given the above-mentioned optimization.</p>
+
+<p>Similarly, since <em>tensor</em> <code class="highlighter-rouge">y</code> and <em>tensor</em> <code class="highlighter-rouge">report_y</code> have the common subexpression of <em>tensor</em> <code class="highlighter-rouge">y</code>, it seems TensorFlow may actually <em>not</em> evaluate <code class="highlighter-rouge">y</code> twice!</p>
+
+<div class="forward">
+  <p>In your machine learning exercises in future, if you do find the above optimization non-existent in TensorFlow, do let your course instructors know!</p>
+</div>
+
+<h1 id="exercises">Exercises</h1>
+
+<p>Recall that the <a href="/ai-course-material/tensorflow/namescope#complete-code">lesson on Name Scope</a> contains code (<code class="highlighter-rouge">get_trials()</code>) that “<em>flips a coin n times</em>” using Python’s random number generator <code class="highlighter-rouge">random.randrange()</code>.</p>
+
+<p>And then, in the <a href="/ai-course-material/tensorflow/feeddict#complete-code">lesson on <code class="highlighter-rouge">feed_dict</code></a> contains code (also in <code class="highlighter-rouge">get_trials()</code>) that does the same <em>coin-flipping</em> but using TensorFlow’s random number generator <code class="highlighter-rouge">tf.random_uniform()</code>.</p>
+
+<p>Your homework is to use TensorFlow summaries to compare the performance of those 2 different <em>random number generators</em>. The comparison must be done in the same plot, like what we demonstrated using <a href="#subfolders-for-separate-summaries">subfolders for separate summaries</a>.</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">50.021 Artificial Intelligence</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              50.021 Artificial Intelligence
+            
+            </li>
+            
+            <li><a href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/jekyll"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">jekyll</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/jekyllrb"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">jekyllrb</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Artificial intelligence (AI) is a rich field spanning formal systems for representing and processing symbolic information, computational models of human cognition, and a range of techniques for learning, planning and reasoning under uncertainty.
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

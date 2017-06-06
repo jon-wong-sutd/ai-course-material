@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Tensor vs Node</title>
+  <meta name="description" content="Artificial intelligence (AI) is a rich field spanning formal systems for representing and processing symbolic information, computational models of human cogn...">
+
+  <link rel="stylesheet" href="/ai-course-material/assets/main.css">
+  <link rel="canonical" href="/ai-course-material/tensorflow/tensor-vs-node/">
+  <link rel="alternate" type="application/rss+xml" title="50.021 Artificial Intelligence" href="/ai-course-material/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" href="/ai-course-material/">50.021 Artificial Intelligence</a>
+  
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+            <a class="page-link" href="/ai-course-material/tensorflow/">Tensorflow</a>
+            
+          
+            
+            
+            <a class="page-link" href="/ai-course-material/about/">About</a>
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Tensor vs Node</h1>
+  </header>
+
+  <div class="post-content">
+    <ul id="markdown-toc">
+  <li><a href="#overview" id="markdown-toc-overview">Overview</a></li>
+  <li><a href="#tensor-vs-tftensor" id="markdown-toc-tensor-vs-tftensor">Tensor vs <code class="highlighter-rouge">tf.Tensor</code></a></li>
+  <li><a href="#tensor-is-tensor-not-handle" id="markdown-toc-tensor-is-tensor-not-handle">Tensor Is Tensor, Not Handle</a></li>
+</ul>
+
+<h1 id="overview">Overview</h1>
+
+<p>A <em>tensor</em>, as mentioned in <a href="/ai-course-material/tensorflow/introduction/#tensor">TensorFlow Introduction</a>, is a unit of data.</p>
+
+<p>However, a <em>tensor</em> in an uncomputed (not yet run) graph doesn’t actually exist! A <em>tensor</em> is data that is output from <em>node</em>s (operations) and is also input into <em>node</em>s.</p>
+
+<p>Yet, we need to first <em>conceptually</em> construct the graph with <em>node</em>s and make links between the <em>node</em>s over which <em>tensor</em>s (data) can flow. How do we <em>conceptually</em> describe a simple graph like <code class="highlighter-rouge">(1 + 2) * 4</code>?</p>
+
+<p>Let’s set the scene for that simple expression <code class="highlighter-rouge">(1 + 2) * 4</code>.</p>
+
+<p>The <em>node</em>s are <a href="https://www.tensorflow.org/api_docs/python/tf/add"><code class="highlighter-rouge">tf.add</code></a> and <a href="https://www.tensorflow.org/api_docs/python/tf/multiply"><code class="highlighter-rouge">tf.multiply</code></a>, and 3 more: 3 instances of <a href="https://www.tensorflow.org/api_docs/python/tf/constant"><code class="highlighter-rouge">tf.constant</code></a>.</p>
+
+<div class="side-note">
+  <p>You will recall those 5 <em>node</em>s at <a href="/ai-course-material/tensorflow/introduction/#why-computation-graph">TensorFlow Introduction</a>, where we constructed the graph needed for the expression <code class="highlighter-rouge">(1 + 2) * 4</code>.</p>
+</div>
+
+<p>Conceptually, that is in words, we describe our graph thus:</p>
+<ul>
+  <li><em>Node</em> <code class="highlighter-rouge">tf.constant(1)</code>
+    <ul>
+      <li>Inputs: Just the number “1”.</li>
+      <li>Output: <em>Tensor</em> output from <code class="highlighter-rouge">tf.constant(1)</code></li>
+    </ul>
+  </li>
+  <li><em>Node</em> <code class="highlighter-rouge">tf.constant(2)</code>
+    <ul>
+      <li>Inputs: Just the number “2”.</li>
+      <li>Output: <em>Tensor</em> output from <code class="highlighter-rouge">tf.constant(2)</code></li>
+    </ul>
+  </li>
+  <li><em>Node</em> <code class="highlighter-rouge">tf.add</code>:
+    <ul>
+      <li>Inputs: <em>Tensor</em> output from <code class="highlighter-rouge">tf.constant(1)</code> and another from <code class="highlighter-rouge">tf.constant(2)</code></li>
+      <li>Output: <em>Tensor</em> output from <code class="highlighter-rouge">tf.add</code></li>
+    </ul>
+  </li>
+</ul>
+
+<p>It is important to bear in mind that the actual <em>tensor</em>s (data) <code class="highlighter-rouge">1</code> and <code class="highlighter-rouge">2</code> are not yet existing, since we have not run (executed) our graph! Hence, we need to <em>conceptually</em> specify inputs for <em>node</em> <code class="highlighter-rouge">tf.add</code> like this: “<em>Tensor output from <code class="highlighter-rouge">tf.constant(1)</code></em>”.</p>
+
+<p>That phrase is quite a mouthful!</p>
+
+<h1 id="tensor-vs-tftensor">Tensor vs <code class="highlighter-rouge">tf.Tensor</code></h1>
+
+<p>Fortunately, there is a more concise way to specify that. In TensorFlow’s Python API, there is an object that represents <em>conceptually</em> the <em>output tensor of a node</em> — the <a href="https://www.tensorflow.org/api_docs/python/tf/Tensor"><code class="highlighter-rouge">tf.Tensor</code></a>.</p>
+
+<p>Consider <em>node</em> <code class="highlighter-rouge">tf.multiply</code> described conceptually (in words):</p>
+<ul>
+  <li><em>Node</em> <code class="highlighter-rouge">tf.constant(4)</code>
+    <ul>
+      <li>Inputs: Just the number “4”.</li>
+      <li>Output: <em>Tensor</em> output from <code class="highlighter-rouge">tf.constant(4)</code></li>
+    </ul>
+  </li>
+  <li><em>Node</em> <code class="highlighter-rouge">tf.multiply</code>:
+    <ul>
+      <li>Inputs: <em>Tensor</em> output from <code class="highlighter-rouge">tf.add</code> and another from <code class="highlighter-rouge">tf.constant(4)</code></li>
+    </ul>
+  </li>
+</ul>
+
+<p>Note the verbose phrase “<em>Tensor output from <code class="highlighter-rouge">tf.add</code></em>”.</p>
+
+<p>In TensorFlow’s Python API, constructing a <em>node</em> (eg. via <code class="highlighter-rouge">tf.constant</code>) returns a <code class="highlighter-rouge">tf.Tensor</code> object that represents the <em>node</em>’s output. This <code class="highlighter-rouge">tf.Tensor</code> object is a much more concise expression than the verbose phrase “<em>tensor output from some op</em>”.</p>
+
+<div class="tip">
+  <p>A <code class="highlighter-rouge">tf.Tensor</code> object is a <em>conceptual</em> representation of an actual yet-to-exist <em>tensor</em>. Use it as a “<em>conceptual tensor</em>” to pass between <em>node</em>s, just like how an actual <em>tensor</em> would pass between <em>node</em>s when the graph is run.</p>
+
+  <p>When the <code class="highlighter-rouge">tf.Tensor</code> object is evaluated — which runs the part of the graph required for the evaluation — this object becomes an actual existing <em>tensor</em>.</p>
+</div>
+
+<p>Now we can concisely describe our graph! We start getting <code class="highlighter-rouge">tf.Tensor</code> objects, and passing them between <em>node</em>s.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c"># Node `tf.constant(1)` yields tensor `a`</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span></code></pre></figure>
+
+<p>The 5 Python <em>variables</em> <code class="highlighter-rouge">a</code>, <code class="highlighter-rouge">b</code> to <code class="highlighter-rouge">e</code> all contain a <code class="highlighter-rouge">tf.Tensor</code> object each.</p>
+
+<p>In terms of Python classes (that is, <a href="https://en.wikipedia.org/wiki/Object-oriented_programming">OOP</a>), <code class="highlighter-rouge">tf.multiply(c, d)</code> would be a <a href="https://www.tensorflow.org/api_docs/python/tf/Operation"><code class="highlighter-rouge">tf.Operation</code></a> object, whereas <code class="highlighter-rouge">e</code> would be a <a href="https://www.tensorflow.org/api_docs/python/tf/Tensor"><code class="highlighter-rouge">tf.Tensor</code></a> object.</p>
+
+<p>When we run the graph, actual <em>tensor</em>s will be output from (and input into) <em>node</em>s:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+<span class="c"># sess.run() can evaluate multiple tensors, returning an array of results.</span>
+<span class="n">result1</span><span class="p">,</span> <span class="n">result2</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result1</span><span class="p">)</span> <span class="c"># prints 3, because 1 + 2 = 3</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result2</span><span class="p">)</span> <span class="c"># prints 12, because 4 * 3 = 12</span></code></pre></figure>
+
+<div class="side-note">
+  <p>A <a href="https://stackoverflow.com/a/40871108">StackOverflow answer</a> refers to <a href="https://arxiv.org/pdf/1610.01178.pdf">this paper</a> where page 4 says, “<em>In terms of the computational graph, a tensor can be seen as a symbolic handle to one of the outputs of an operation.</em>”. This is obviously wrong, because it is a <code class="highlighter-rouge">tf.Tensor</code> object that is a “<em>symbolic handle</em>” instead! A <em>tensor</em> is still a piece of <strong>data</strong>, and not a <em>symbolic handle</em>! Beware <a href="https://en.wikipedia.org/wiki/Argumentum_ad_populum">argumentum ad populum</a>, and always read deeply into all material.</p>
+</div>
+
+<div class="forward">
+  <p>It would seem that <em>tensor</em> <code class="highlighter-rouge">c</code> is run twice — once when <code class="highlighter-rouge">c</code> is run and again when <code class="highlighter-rouge">e</code> is run. Later on, in the lesson on <em>Tensor Summaries</em>, we will consider an optimization within TensorFlow that intelligently runs <code class="highlighter-rouge">c</code> only once.</p>
+
+  <p>Note that <code class="highlighter-rouge">c</code> and <code class="highlighter-rouge">e</code> are both run within the same <code class="highlighter-rouge">tf.Session.run()</code> call.</p>
+</div>
+
+<h1 id="tensor-is-tensor-not-handle">Tensor Is Tensor, Not Handle</h1>
+
+<p>Therefore, understand that a <em>tensor</em> is <strong>data</strong> that passes between <em>node</em>s in a graph. A <em>tensor</em> is not a handle (nor function nor expression).</p>
+
+<p>To conceptually describe our graph, we do need a “<em>conceptual tensor</em>” that is a yet-to-exist <em>tensor</em>. In TensorFlow’s Python API, a “<em>conceptual tensor</em>” is represented by a <code class="highlighter-rouge">tf.Tensor</code> object.</p>
+
+<div class="tip">
+  <p>Every construction of a <em>node</em> (via TensorFlow’s <em>op</em>s) will return a <code class="highlighter-rouge">tf.Tensor</code> object, which is the <em>node</em>’s output <em>tensor</em>.</p>
+
+  <p>During construction (of graph and <em>node</em>s), a <em>node</em> receives <code class="highlighter-rouge">tf.Tensor</code> object(s) as input(s), and emits a <code class="highlighter-rouge">tf.Tensor</code> object as its output.</p>
+</div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">50.021 Artificial Intelligence</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              50.021 Artificial Intelligence
+            
+            </li>
+            
+            <li><a href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/jekyll"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">jekyll</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/jekyllrb"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">jekyllrb</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Artificial intelligence (AI) is a rich field spanning formal systems for representing and processing symbolic information, computational models of human cognition, and a range of techniques for learning, planning and reasoning under uncertainty.
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
